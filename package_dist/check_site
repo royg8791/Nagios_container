@@ -1,0 +1,35 @@
+#!/bin/sh
+# Settings
+#####################################
+# Nagios return codes
+STATE_OK=0
+STATE_WARNING=1
+STATE_CRITICAL=2
+STATE_UNKNOWN=3
+
+while getopts H:u:O: OPT
+do
+  case $OPT in
+    "H" ) FLAGH="TRUE" ; H="$OPTARG" ;;
+    "u" ) FLAGH="TRUE" ; u="$OPTARG" ;;
+    "O" ) FLAGH="TRUE" ; O="$OPTARG" ;;
+      * ) echo "Usage: $CMDNAME [-H webhost -u URL -O optional commands]. Example: -H catchmedia.com -u /index.php -S (for SSL)" 1>&2
+          exit $STATE_UNKNOWN ;;
+  esac
+done
+
+
+echo $H""$u
+echo $O
+result=`/opt/nagios/libexec/check_http -H $H -u "$u" $O`
+status=`echo $result | awk -F"HTTP" '{print$3}' | awk '{print$2}'`
+echo $result
+echo $status
+exit
+
+if [ "$status" == "200" ] | [ "$status" == "401" ] | [ "$status" == "403" ] | [ "$status" == "404" ]
+then
+  echo $result
+  exit $STATE_OK
+fi
+exit $STATE_CRITICAL

@@ -1,0 +1,39 @@
+FROM gitregs.catchmedia.com/opsys/cmapaphp:latest
+
+LABEL "maintainer"="Yehuda Gilbaum"
+LABEL "image"="salt-ng"
+LABEL "version"="0.1.0"
+
+RUN apt install -y redis-server
+
+WORKDIR /
+RUN mkdir -p /mnt/gfs/tmp/salt_www dir
+RUN chown www-data: /mnt/gfs/ -R
+
+COPY ${PWD}/phantomjs /usr/bin/phantomjs
+
+COPY ${PWD}/start /start
+
+WORKDIR /opt/
+RUN git clone https://gitlab+deploy-token-4:a7RSBKwyjTyHQkRCCd3S@gitlab.catchmedia.com/saltng/saltng.git
+WORKDIR /opt/saltng/
+RUN git checkout tags/release=1.7.22
+RUN echo -e "#!/bin/bash\nexport SALTNG_VERSION=1.7.22" > /etc/profile.d/saltng.sh
+WORKDIR /
+
+RUN ln -s /opt/saltng /opt/salt
+RUN mkdir -p /opt/conf
+RUN mkdir -p /opt/shared/hidef
+COPY ${PWD}/hidef.ini /opt/shared/hidef/hidef.ini
+COPY ${PWD}/salt-apache.conf /etc/apache2/sites-enabled/salt-apache.conf
+RUN mkdir -p /opt/redis-cache
+COPY ${PWD}/redis.conf /opt/redis-cache/redis.conf
+COPY ${PWD}/settings.php /opt/saltng/settings.php
+RUN mkdir -p /opt/data
+COPY ${PWD}/MPDF610/ /opt/data/MPDF610/
+
+WORKDIR /opt/saltng/salt-dashman/
+RUN composer install
+RUN composer dump-autoload -o
+WORKDIR /
+

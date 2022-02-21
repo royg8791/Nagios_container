@@ -1,0 +1,44 @@
+#!/bin/bash
+#
+# distributes all checks in the ACROS tree
+# the checks will arrive in a global yaml file containing all checks for that particular site/farm
+#
+#################### Redis DB ####################
+# NIF  --- redis-cli -h 10.3.14.38  -p 12006 -n 10
+# PROD --- redis-cli -h 10.3.8.133  -p 12006 -n 10
+# SLIV --- redis-cli -h 10.13.7.187 -p 12006 -n 10
+##################################################
+# declare host ip for redis according to SITE
+SITE=$1
+[[ "$SITE" == "nif" ]] && redis_host="10.3.14.38" && jump="jump_$SITE"
+[[ "$SITE" == "prod" ]] && redis_host="10.3.8.133" && jump="jump-$SITE"
+[[ "$SITE" == "sliv" ]] && redis_host="10.13.7.187" && jump="jump_$SITE"
+
+farms=$(egrep ^" " /mnt/data/monitoring/structure.yml)
+
+if [[ "$2" == "webtests" ]]; then
+    cat /mnt/data/monitoring/web.yml
+elif [[ "$2" == "farms" ]]; then
+    echo "$farms"
+elif [[ "$2" == "checks_count" ]]; then
+    if [[ "$3" ]] && [[ "$farms" =~ "$3" ]]; then
+        checks_count=$(redis-cli -h $redis_host -p 12006 -n 10 KEYS "checks:*" | grep $3 | wc -l)
+    else
+        checks_count=$(redis-cli -h $redis_host -p 12006 -n 10 KEYS "checks:*" | egrep -v "$(echo $farms | sed 's/ /|/g')" | wc -l)
+    fi
+    echo $checks_count
+elif [[ "$2" ]] && [[ "$farms" =~ "$2" ]]; then
+    checks=$(redis-cli -h $redis_host -p 12006 -n 10 KEYS "checks:*" | grep $2)
+    [[ "$checks" ]] && redis-cli -h $redis_host -p 12006 -n 10 DEL $checks &>/dev/null
+    redis-cli -h $redis_host -p 12006 -n 10 PUBLISH "run_checks:main-$2" "run checks" &>/dev/null
+    sleep 10
+    checks=$(redis-cli -h $redis_host -p 12006 -n 10 KEYS "checks:*" | grep $2)
+    redis-cli -h $redis_host -p 12006 -n 10 MGET $checks | sed 's/\\n/\n/g'
+else
+    checks=$(redis-cli -h $redis_host -p 12006 -n 10 KEYS "checks:*" | egrep -v "$(echo $farms | sed 's/ /|/g')")
+    [[ "$checks" ]] && redis-cli -h $redis_host -p 12006 -n 10 DEL $checks &>/dev/null
+    redis-cli -h $redis_host -p 12006 -n 10 PUBLISH "run_checks:$jump" "run checks" &>/dev/null
+    sleep 10
+    checks=$(redis-cli -h $redis_host -p 12006 -n 10 KEYS "checks:*" | egrep -v "$(echo $farms | sed 's/ /|/g')")
+    redis-cli -h $redis_host -p 12006 -n 10 MGET $checks | sed 's/\\n/\n/g'
+fi

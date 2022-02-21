@@ -1,0 +1,31 @@
+#!/bin/sh
+
+
+[ "${PA_HOST}" == "" ] && PA_HOST=pa-atl.catchmedia.com
+[ "${REPORTS_HOST}" == "" ] && REPORTS_HOST=reports-atl.catchmedia.com
+[ "${DSP_HOST}" == "" ] && DSP_HOST=dsp-atl.catchmedia.com
+[ "${PARTNERSITE_HOST}" != "" ] && PARTNERSITE_HOST=patnersite-atl.catchmedia.com
+
+sed -i "s|pa-server|${PA_HOST}|g"  /opt/shared/hidef/hidef.ini
+sed -i "s|reports-server|${REPORTS_HOST}|g"  /opt/shared/hidef/hidef.ini
+sed -i "s|dsp-server|${DSP_HOST}|g"  /opt/shared/hidef/hidef.ini
+sed -i "s|partnersite-server|${PARTNERSITE_HOST}|g"  /opt/shared/hidef/hidef.ini
+
+grep -q SYSTEM_FARMNAME /opt/shared/hidef/hidef.ini
+if [ "$?" != "0" ];
+then
+  echo "str SYSTEM_FARMNAME = \"$FARM\"" >> /opt/shared/hidef/hidef.ini
+else
+  sed -i "s|str SYSTEM_FARMNAME.*|str SYSTEM_FARMNAME = \"$FARM\"|g"  /opt/shared/hidef/hidef.ini
+fi
+
+/usr/bin/redis-server /opt/redis-cache/redis.conf &
+/usr/bin/phantomjs /opt/salt/salt-dashman/src/PdfExport/phantomjs/highcharts-convert.js -host 127.0.0.1 -port 3003 &
+
+while true;
+do
+  apachectl -f /etc/apache2/apache2.conf -e debug -DFOREGROUND
+  sleep 5;
+done
+
+

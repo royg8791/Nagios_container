@@ -1,0 +1,11 @@
+{
+  "type_help": "[filej2|file|kv2j|kv|key2j|key|exec]",
+  "type": "file",
+  "destination": "/opt/bin",
+  "owner": "root",
+  "mode": "755",
+  "run_once": {
+    "action": "run_once"
+  }
+}
+

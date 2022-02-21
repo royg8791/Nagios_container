@@ -1,0 +1,59 @@
+#!/bin/bash
+#
+# gathers metrics for all checks that run on more than 1 server
+# the metrics will be gathered from redis DB
+#
+#################### Redis DB ####################
+# NIF  --- redis-cli -h 10.3.14.38  -p 12006 -n 10
+# PROD --- redis-cli -h 10.3.8.133  -p 12006 -n 10
+# SLIV --- redis-cli -h 10.13.7.187 -p 12006 -n 10
+##################################################
+# declare host ip for redis according to SITE
+site=$(egrep ^[^" "] /mnt/data/monitoring/structure.yml | cut -d: -f1)
+[[ "$site" == "nif" ]] && redis_host="10.3.14.38"
+[[ "$site" == "prod" ]] && redis_host="10.3.8.133"
+[[ "$site" == "sliv" ]] && redis_host="10.13.7.187"
+
+NAGIOS_OK=0
+NAGIOS_WARNING=1
+NAGIOS_CRITICAL=2
+NAGIOS_UNKNOWN=3
+function set_exit_code () {
+    local new_exit_code=$1
+    [ $EXIT_CODE -lt $new_exit_code ] && EXIT_CODE=$new_exit_code
+}
+EXIT_CODE=$NAGIOS_OK
+
+metric=$1
+host_name=$2
+
+function issue_human_highlight () {
+    local level=$1
+    # "PROBLEM" is used to extract the problem from the metric files
+    echo "$level .......... $(echo "$metric_content" | grep PROBLEM | cut -d: -f2- | sed -z 's/\n/...../g')"
+    echo "---------------------------------------------------------------------"
+    echo "$metric_content" | grep -v PROBLEM
+}
+
+redis-cli -h $redis_host -p 12006 -n 10 DEL "metrics:${metric}_${host_name}" &>/dev/null
+redis-cli -h $redis_host -p 12006 -n 10 PUBLISH "remetric:${metric}_${host_name}" "$metric" &>/dev/null
+
+i=0
+while [[ $i -lt 60 ]]; do
+    metric_content=$(redis-cli -h $redis_host -p 12006 -n 10 GET "metrics:${metric}_${host_name}" | sed 's/\\n/\n/g')
+    [[ "$metric_content" ]] && break
+    sleep 1
+    let i++
+done
+
+if [[ "$(echo "$metric_content" | egrep -i "critical|fatal")" ]]; then
+    issue_human_highlight CRITICAL
+    set_exit_code $NAGIOS_CRITICAL
+elif [[ "$(echo "$metric_content" | egrep -i "warning|not ok|error")" ]]; then
+    issue_human_highlight WARNING
+    set_exit_code $NAGIOS_WARNING
+else
+    issue_human_highlight OK
+fi
+
+exit $EXIT_CODE

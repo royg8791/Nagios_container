@@ -1,0 +1,25 @@
+#!/bin/bash -l
+
+lbinst=l7lbprod
+
+dtc=$(curl -s localhost:8500/v1/agent/self|jq -r '.["Config"]["Datacenter"]')
+domain=$(curl -s localhost:8500/v1/agent/self|jq -r '.["DebugConfig"]["DNSDomain"]')
+[ "$PACKAGE_PORT" == "" ] && PACKAGE_PORT=19191
+
+domains_to_advertise="$PACKAGE.$domain,$PACKAGE.$dtc.$domain"  # Defaults
+[ -n "$L7LBDMN" ] && domains_to_advertise="$domains_to_advertise,$L7LBDMN"
+
+tags="$lbinst.enable=true $lbinst.frontend.entryPoints=http,https,httpnord $lbinst.frontend.rule=Host:$domains_to_advertise"
+
+auth=
+if [ -n "$L7LBAUTH" ];
+then
+  # cm:catchmedia
+  # cm:\$apr1\$4rWCq8bQ\$1ipqzXbr3uY0wDoTgk9Lx. $lbinst.frontend.auth.basic.removeHeader=true"
+  auth="$lbinst.frontend.auth.basic.removeHeader=true"
+  auth="$lbinst.frontend.auth.basic=$L7LBAUTH"
+fi
+setservice $PACKAGE-l7lb -p $PACKAGE_PORT -t "$tags $auth"
+
+exit 0
+

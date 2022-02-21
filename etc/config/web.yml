@@ -1,0 +1,106 @@
+hosts:
+  abpnews.catchmedia.com
+  tmp.catchmedia.com
+  admin-cmj.catchmedia.com
+  bugzilla.catchmedia.com
+  campman.catchmedia.com
+  cmsdk-js.catchmedia.com
+  docs.catchmedia.com
+  endeavor.catchmedia.com
+  frs.catchmedia.com
+  gitlab.catchmedia.com
+  gitregs.catchmedia.com
+  gitrepo.catchmedia.com
+  img.catchmedia.com
+  jenkins.catchmedia.com
+  kiosk.playanywhere.com
+  shop.playanywhere.com
+  mediaj.catchmedia.com
+  mnbdemo.catchmedia.com
+  nagios.catchmedia.com
+  p.catchmedia.com
+  redmine.catchmedia.com
+  salt-atl.catchmedia.com
+  salt-cmj.catchmedia.com
+  salt-mediaj.catchmedia.com
+  seafile.catchmedia.com
+  ticketman-atl.catchmedia.com
+  tracks-atl.catchmedia.com
+  websvn.catchmedia.com
+  wiki.catchmedia.com
+  wme.catchmedia.com
+  www.catchmedia.com
+  www.playanywhere.com
+  zee.catchmedia.com
+  cmanalytics.sonyliv.com
+  pa.sonyliv.com
+  partner.sermonsanywhere.com
+  admin.sermonsanywhere.com
+  tracksmusic.com
+  www.google.com
+  pa.abpnews.catchmedia.com
+webtests:
+  farms:
+    atl:
+      cmts_sanity
+      salt_sanity
+    cmj:
+      salt_sanity
+    nabp:
+      cmts_sanity
+      salt_sanity
+      media_upload
+    sonyliv:
+      cmts_sanity
+      salt_sanity
+      media_upload
+  different_sites:
+    CMSDK_JS: webtest!sites!cmsdkjs_sanity
+    SEAFILE: webtest!sites!seafile_sanity
+    TRACKS: webtest!tracks!tracks_site
+    p.catchmedia.com: webtest!sites!review_sanity
+websites:
+  http://airload.catchmedia.com: check_site!airload.catchmedia.com!/
+  http://catchmedia.com: check_site!catchmedia.com!/
+  http://cmsdk-js.catchmedia.com: check_site!cmsdk-js.catchmedia.com!/
+  http://p.catchmedia.com: check_site!p.catchmedia.com!/
+  http://pa-atl.catchmedia.com: check_site!pa-atl.catchmedia.com!/ldirectord.php
+  http://playanywhere.com: check_site!www.playanywhere.com!/
+  http://promo.catchmedia.com: check_site!promo.catchmedia.com!/transcoder/test.php
+  http://sermonsanywhere.com: check_site!sermonsanywhere.com!/
+  http://smartconnect.catchmedia.com: check_site!www.playanywhere.com!/coupon_manager/
+  http://smartdash.catchmedia.com: check_site!smartdash.catchmedia.com!/
+  http://smartpromote.catchmedia.com: check_site!smartpromote.catchmedia.com!/smartpromote/
+  http://tmusic-qa.catchmedia.com: check_site!tmusic-qa.catchmedia.com!/
+  http://tracksmusic.com: check_site!tracksmusic.com!/
+  https://files.catchmedia.com: check_site!files.catchmedia.com!/
+  https://pa-atl.catchmedia.com: check_site!pa-atl.catchmedia.com!/ldirectord.php!-S
+  https://tracksmusic.com/new: check_site!tracksmusic.com!/new/!-S
+  https://www.catchmedia.com: check_site!www.catchmedia.com!/
+  #sdk
+  https://1115282512.rsc.cdn77.org/plinks/jssdk/CMSDK-atl-latest.min.js: check_site!1115282512.rsc.cdn77.org!/plinks/jssdk/CMSDK-atl-latest.min.js!
+  https://1115282512.rsc.cdn77.org/plinks/jssdk/CMSDK-spa-latest.min.js: check_site!1115282512.rsc.cdn77.org!/plinks/jssdk/CMSDK-spa-latest.min.js!
+  https://1115282512.rsc.cdn77.org/plinks/jssdk/CMSDK-use1-latest.min.js: check_site!1115282512.rsc.cdn77.org!/plinks/jssdk/CMSDK-use1-latest.min.js!
+  #MnB
+  ftp://sftp.mixandburn.com: check_site_ftp!sftp.mixandburn.com!22
+  ftp://sftp.playanywhere.com: check_site_ftp!sftp.playanywhere.com!22
+  http://admin.mixandburn.com: check_site!admin.mixandburn.com!/login.aspx!-S
+  http://amedisys.mixandburn.com: check_site!amedisys.mixandburn.com!/
+  http://ecr.mixandburn.com: check_site!ecr.mixandburn.com!/
+  http://fye.mixandburn.com: check_site!fye.mixandburn.com!/
+  http://help.mixandburn.com: check_site!help.mixandburn.com!/
+  http://kiosk.mixandburn.com: check_site!kiosk.mixandburn.com!/device.aspx
+  http://kiosk.playanywhere.com: check_site!kiosk.playanywhere.com!/device.aspx
+  http://prajin.mixandburn.com: check_site!prajin.mixandburn.com!/
+  http://ws.mixandburn.com: check_site!ws.mixandburn.com!/
+  http://www.fye.mixandburn.com: check_site!fye.playanywhere.com!/
+  http://www.mixandburn.com: check_site!shop.playanywhere.com!/
+  http://www.prajin.mixandburn.com: check_site!prajin.mixandburn.com!/
+  #1World
+  http://reports-ais.catchmedia.com: check_site!reports-ais.catchmedia.com!/admin
+  http://reports-atl.catchmedia.com: check_site!reports-atl.catchmedia.com!/admin
+  http://reports-cmj.catchmedia.com: check_site!reports-cmj.catchmedia.com!/admin
+  http://reports-spa.catchmedia.com: check_site!reports-spa.catchmedia.com!/admin
+  http://reports-spa.catchmedia.com/reports/live_users_counter.txt: check_site!reports-spa.catchmedia.com!/reports/live_users_counter.txt
+
+

@@ -1,0 +1,7 @@
+#!bin/bash -l
+
+res=0
+
+[ -z "$(pidof apache)" ] && res=1
+
+exit $res

@@ -1,0 +1,41 @@
+#!/bin/bash
+#
+# runs specific scripts through nrpe
+#
+####################################
+NAGIOS_OK=0
+NAGIOS_WARNING=1
+NAGIOS_CRITICAL=2
+NAGIOS_UNKNOWN=3
+set_exit_code () {
+    local new_exit_code=$1
+    [ $EXIT_CODE -lt $new_exit_code ] && EXIT_CODE=$new_exit_code
+}
+EXIT_CODE=$NAGIOS_OK
+
+script_path=$1
+arg1=$2
+arg2=$3
+
+function issue_human_highlight () {
+    local level=$1
+    echo "$level .......... $(echo "$output" | egrep PROBLEM | cut -d: -f2- | sed -z 's/\n/...../g')"
+    echo "---------------------------------------------------------------------"
+    echo "$output" | grep -v PROBLEM
+}
+
+[[ ! -e "$script_path" ]] && echo "ERROR: Could not find $script_path" && exit 2
+
+output=$($script_path $arg1 $arg2)
+
+if [[ "$(echo "$output" | egrep -i "critical|fatal")" ]]; then
+    issue_human_highlight CRITICAL
+    set_exit_code $NAGIOS_CRITICAL
+elif [[ "$(echo "$output" | egrep -i "warning|not ok|error")" ]]; then
+    issue_human_highlight WARNING
+    set_exit_code $NAGIOS_WARNING
+else
+    issue_human_highlight OK
+fi
+
+exit $EXIT_CODE

@@ -1,0 +1,31 @@
+#!/bin/bash -l
+
+script="$(readlink -f $0)"
+script_base="${script##*/}"
+script_path="${script%/$script_base}"
+
+start_app()
+{
+  echo "Starting $PACKAGE" | $SYS_LOG
+  [ ! -z "$(pidof apache2)" ] && echo "Application $PACKAGE is already running. Nothing to do." | $SYS_LOG && return
+
+  /etc/init.d/apache2 start
+
+  cp $script_path/health_check_REAL $script_path/health_check
+}
+
+stop_app()
+{
+  echo "Stopping $PACKAGE" | $SYS_LOG
+  cp $script_path/health_check_OK $script_path/health_check
+
+  /etc/init.d/apache2 stop
+}
+
+function restart_app()
+{
+  stop_app
+  sleep 1
+  start_app
+}
+

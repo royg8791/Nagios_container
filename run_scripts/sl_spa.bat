@@ -1,0 +1,20 @@
+SETLOCAL ENABLEEXTENSIONS
+SET me=%~n0
+SET parent=%~dp0
+
+SET CNAME=salt-ng
+SET IMAGE=gitregs.catchmedia.com/component/salt-ng:latest
+
+docker pull %IMAGE%
+
+docker stop %CNAME%
+docker rm %CNAME%
+
+docker run -idt --name %CNAME% --restart always ^
+  -p 8085:80 ^
+  -v /tmp:/tmp ^
+  --env PARTNERSITE_HOST="pa-spa.catchmedia.com" ^
+  --env REPORTS_HOST="reports-spa.catchmedia.com" ^
+  --env PA_HOST="pa-spa.catchmedia.com" ^
+  %IMAGE%
+
