@@ -1,18 +1,15 @@
-ACROS
+# ACROS
 Automatic Checks Registration & Orchestration System (ACROS)
 
-====== Introduction ======
-[[https://gitrepo.catchmedia.com/component/cmnagios|Git Repository]]
-
-====General description:====
+## General description
 
 ACROS system is build out of several components:
-  * [[https://wiki.catchmedia.com/doku.php?id=nagios:acros#machines|Machines]] to monitor
-  * [[https://wiki.catchmedia.com/doku.php?id=nagios:acros#redis|Redis]] server on every Site
-  * [[https://wiki.catchmedia.com/doku.php?id=nagios:acros#nrpe|NRPE]] container on every Site
-  * [[https://wiki.catchmedia.com/doku.php?id=nagios:acros#nagios|Nagios]] container
+  * **Machines** to monitor
+  * **Redis** server on every Site
+  * **NRPE** container on every Site
+  * **Nagios** container
 
-The way it works:
+#### The way it works
 
 1. every Site has a NRPE container and a Redis-server
 
@@ -22,14 +19,7 @@ The way it works:
 
 4. Nagios then connects to NRPE to get the wanted data and uploads it to the browser
 
-{{:nagios:components.jpg?800|}}
-
-[[https://wiki.catchmedia.com/doku.php?id=nagios:acros#add_new_checks|How to add new Checks]]
-
-[[https://wiki.catchmedia.com/doku.php?id=nagios:acros#add_new_farm|How to add a new Farm]]
-
-[[https://wiki.catchmedia.com/doku.php?id=nagios:acros#add_new_site|How to add a new Site]]
-===Machines===
+## Machines
 Every machine in the system will have different checks to monitor accorfing to the machines characteristics and components.
 The Idea was to create a system that checks what kind of checks need to be run on the machine and monitor them accordingly.
 
@@ -40,13 +30,13 @@ __To add a new machine to this system__: you simply have to run a script located
 This script will add several things to the local machine:
   * /opt/rolmin/ directory (including nagios scripts in "nagios" directory)
   * cron that runs every minute (/etc/cron.d/rolmin) that initiates all relevant scripts
-===Redis===
+## Redis
 Every Site has its own dedicated Redis-server:
-<code>
+```
 NIF  - 10.3.14.38  - ops_sdemo       << redis-server
 PROD - 10.3.8.133  - ops_clix        << redis-server
 SLIV - 10.13.7.187 - ops_sonyliv     << redis-server
-</code>
+```
   * all Redis-servers use the same Ports and Database
   * Port = 12006
   * DB = 10
@@ -59,26 +49,26 @@ Every Machine is "listening" to specific changes in data insode the Redis-server
     * __remetric:*__ - will run /opt/rolmin/nagios/publish_metrics.sh for a specific metric.
 Example for seting a metric inside the Redis-server:
   * From evry machine **/opt/rolmin/nagios/publish_metrics.sh**
-<code>
+```
 redis-cli -h 10.3.14.38 -p 12006 -n 10 SETEX "metrics:${mtrc}_${HOSTNAME}" 86400 "OK:       ${message}"
-</code>
+```
 Another example for geting all data for a Site/Farm:
   * From NRPE **/opt/nrpe/bin/cmnrpe_gather_checks**
-<code>
+```
 redis-cli -h 10.3.14.38 -p 12006 -n 10 MGET $checks
-</code>
+```
 **Bonus** - how to get all Checks and Metrics from the Redis-server:
-<code>
+```
 redis-cli -h 10.3.14.38 -p 12006 -n 10 KEYS \*
-</code>
-====NRPE====
+```
+## NRPE
 **N**agios **R**emote **P**lugin **E**xecutor
 
 __To connect:__ (NIF Site)
-<code>
+```
 ops@jump_nif:~$ docch nrpe
 root@nrpe:/#
-</code>
+```
 NRPE stores all its relevant components in 2 locations:
   * /opt/nrpe/bin
     * Here are all scripts that are executed by Nagios when connecting to NRPE and asking for data.
@@ -88,30 +78,30 @@ NRPE stores all its relevant components in 2 locations:
   * /etc/nagios/nrpe.d
     * inside you'll find a file, cm-nagios.cfg, that contains all available commands to use on this NRPE server.
 __To add a new command:__
-<code>
+```
 command[cmnrpe_gather_metrics]=/opt/nrpe/bin/cmnrpe_gather_metrics $ARG1$ $ARG2$ $ARG3$
-</code>
+```
   * add the command to /etc/nagios/nrpe.d/cm-nagios.cfg: (example for cmnrpe_gather_metrics)
     * command name = "cmnrpe_gather_metrics"
     * command script = "/opt/nrpe/bin/cmnrpe_gather_metrics"
     * add "$ARG1$ $ARG2$ $ARG3$" so you coul'd run 3 args from Nagios CLI if needed
   * After adding all of the abbove, you'll have to reload NRPE service:
-<code>
+```
 /etc/init.d/nagios-nrpe-server reload
-</code>
-====Nagios====
+```
+## Nagios
 __To connect:__
-<code>
+```
 ops@jump_nif:~$ docch nagios
 root@nagios:/# 
-</code>
+```
 Nagios Path which contains all Nagios components - **/opt/nagios/**.
 
 1. /opt/nagios/etc/:
-<code>
+```
 root@nagios:/opt/nagios/etc# ls
 acros_init.sh  cgi.cfg  config  htpasswd.users  nagios.cfg  objects  resource.cfg  sites  tmp
-</code>
+```
   * __acros_init.sh__ - runs only on container startup to build the entire system using scripts from config/ Dir.
   * __cgi.cfg__, __nagios.cfg__, __resources.cfg__ - configuration files for Nagios system to read.
   * __config/__ - contains configuration file builders for all components needed for nagios.
@@ -123,16 +113,16 @@ acros_init.sh  cgi.cfg  config  htpasswd.users  nagios.cfg  objects  resource.cf
   * contains libraries, binaries and scripts crucial for Nagios.
   * Nagios uses **check_nrpe** to comunicate with all NRPE servers:
     * check_nrpe connects to a **Host** (NRPE DNS/IP(in this case NIF - nrpe.nif.catchmedia.com)) and runs a **command** (cmnrpe_gather_checks) on the Hosts NRPE with given **arguments** (nif atl)
-<code>
+```
 /opt/nagios/libexec/check_nrpe -H nrpe.nif.catchmedia.com -t 600 -c cmnrpe_gather_checks -a nif atl
-</code>
+```
 3. /opt/nagios/var/:
   * **nagios.log**:
     * read this to find out what causes the system to break.
     * you will know what scripts (from /opt/nagios/etc/config/) to run according to the log file.
 
-====Add New Checks====
-====Add New Farm====
-====Add New Site====
+## Add New Checks
+## Add New Farm
+## Add New Site
 
 
