@@ -9,8 +9,6 @@ ACROS system is build out of several components:
   * **NRPE** container on every Site
   * **Nagios** container
 
-![image](https://github.com/royg8791/Nagios_container/blob/main/components.jpg)
-
 #### The way it works
 
 1. every Site has a NRPE container and a Redis-server
@@ -20,6 +18,8 @@ ACROS system is build out of several components:
 3. NRPE connects to the Redis-server to retrieve wanted data about a machine
 
 4. Nagios then connects to NRPE to get the wanted data and uploads it to the browser
+
+![image](https://github.com/royg8791/Nagios_container/blob/main/components.jpg)
 
 ## Machines
 Every machine in the system will have different checks to monitor accorfing to the machines characteristics and components.
