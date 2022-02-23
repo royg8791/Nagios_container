@@ -9,6 +9,8 @@ ACROS system is build out of several components:
   * **NRPE** container on every Site
   * **Nagios** container
 
+![image](https://github.com/royg8791/Nagios_container/blob/main/components.jpg)
+
 #### The way it works
 
 1. every Site has a NRPE container and a Redis-server
