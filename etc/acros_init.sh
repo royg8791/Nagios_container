@@ -16,13 +16,7 @@ echo "
 ##################################################################################
 "
 
-###### Try to use list of sites from previous runs, resort to hardcoded list if empty ######
-sites=$(ls /opt/nagios/etc/sites/)
-if [ -z "$sites" ];
-then
-  # First run, use hardcoded list of sites, will be used if persistent volume is empty
-  sites="nif prod sliv"
-fi
+sites="nif prod sliv"
 
 for s in $sites; do
     mkdir -p /opt/nagios/etc/sites/$s/farms
