@@ -1,8 +1,5 @@
-====== ACROS ======
+ACROS
 Automatic Checks Registration & Orchestration System (ACROS)
-
-
-[[acros|Presentation done on 2021-08-12]]
 
 ====== Introduction ======
 [[https://gitrepo.catchmedia.com/component/cmnagios|Git Repository]]
