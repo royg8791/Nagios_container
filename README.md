@@ -42,7 +42,7 @@ SLIV - 10.13.7.187 - ops_sonyliv     << redis-server
   * all Redis-servers use the same Ports and Database
   * Port = 12006
   * DB = 10
-Every Machine is "listening" to specific changes in data insode the Redis-server
+Every Machine is "listening" to specific changes in data inside the Redis-server
   * from a scrip - /opt/rolmin/nagios/subscribe_redis.sh
     * there is a method called subscribe in Redis that listens to a channel for given changes.
     * __run_checks:*__ - if the machine will see this inside the Redis-server it will delete all current checks and run /opt/rolmin/nagios/register_checks.sh that will populate new checks.
@@ -124,7 +124,104 @@ acros_init.sh  cgi.cfg  config  htpasswd.users  nagios.cfg  objects  resource.cf
     * you will know what scripts (from /opt/nagios/etc/config/) to run according to the log file.
 
 ## Add New Checks
+In order to add a new check that checks only machines that qualify for the check, you'll need to do 3 things:
+
+1. Create a Script that checks the wanted data, that includes:
+  * Output of the script has to look like this: (look at Nagios alerts output on the browser)
+```
+OK:       $message
+Warning:  $message
+Critical: $message
+```
+  * For every problem (warning/critical), add a line that will output “PROBLEM:$message”:
+    * (this will show up on the “Status Information” line on the Nagios Dashboard)
+```
+if [[ X =! Y ]]; then
+    echo "Warning:  $message"
+    echo "PROBLEM:$message"
+```
+  * ### use script from /mnt/common/rolmin/dev/nagios/bin/ for reference
+2. Add a way to register the cehck only with relevant machines - /mnt/common/rolmin/dev/nagios/register_checks.sh
+```
+if [[ $(/opt/MegaRAID/MegaCli/MegaCli64 -v &>/dev/null;echo $?) -eq 0 ]]; then
+    check_list "raid" 60 "cmnrpe_gather_metrics" "raid" "$HOSTNAME"
+fi
+```
+  * Example: if the machine can run this “command” without fail then add thew check.
+  * check name needs to replace “raid” (make sure the “check_name” is unique and isn't already used).
+3. Publish metrics when needed - /mnt/common/rolmin/dev/nagios/publish_metrics.sh
+  * add a Function that runs the script you wrote in section “1”:
+```
+function metric_raid () {
+    data=$(/opt/rolmin/nagios/bin/publish_raid_metrics.sh)
+    problem=$(echo "$data" | grep "PROBLEM")
+    create_metric "$metric" "$data" "$problem"
+}
+```
+  * Change “raid” to your unique “check_name”
+  * Copy this function and just change the script it points to, to your script.
+  * then add a “calling” for the function at the bottom of this script:
+```
+raid) metric_raid;;
+```
+  * again… change “raid” to your unique “check_name”
 ## Add New Farm
+1. Make sure that all machines belonging to the farm have these things:
+  * access to the parent Site's Redis-server and “redis-tools” installed for 'redis-cli' to work.
+  * access to “/mnt/common/” for Nagios components instalation.
+  * access to “/mnt/data/” for making sure Nagios will know this Farm is part of the Site's structure.
+2. Install Nagios components by running /mnt/common/rolmin/setup.sh.
+
+3. Add Farm name to the Structure in file - /mnt/data/monitoring/structure.yml
+```
+ops@jump_nif:~$ cat /mnt/data/monitoring/structure.yml 
+nif:
+  abp
+  atl
+  cmj
+  nqa
+```
+4. Inside Nagios container run this script:
+```
+/opt/nagios/etc/acros_init.sh
+```
 ## Add New Site
-
-
+1. /mnt/data/ - create /mnt/data/monitoring/structure.yml including:
+```
+nif:
+  abp
+  atl
+  cmj
+  nqa
+```
+  * Site Name instead of “nif” and list of Farms accordingly.
+  * Make sure all machines and Farms have access to this /mnt/data/ Directory (private per Site).
+2. Create a dedicated Redis-server for Nagios.
+  * Edit these scripts:
+    * /mnt/common/rolmin/dev/nagios/register_checks.sh
+    * /mnt/common/rolmin/dev/nagios/publish_metrics.sh
+    * /mnt/common/rolmin/dev/nagios/subscribe_redis.sh
+    * /mnt/common/rolmin/dev/every_1_minute.sh
+  * Add the Redis-server with Site name to it:
+```
+[[ "$site" == "nif" ]] && redis_host="10.3.14.38"
+[[ "$site" == "prod" ]] && redis_host="10.3.8.133"
+[[ "$site" == "sliv" ]] && redis_host="10.13.7.187"
+```
+3. /mnt/common/ - mount /mnt/common from NIF so that you'll have access to /mnt/common/rolmin directory.
+  * Make sure that all machines and farms have access too.
+  * Run the script /mnt/common/rolmin/setup.sh on all machines inside the Site.
+4. Create a NRPE container using the Gitlab Repo
+  * Like in section “2” add the Redis-server and Site name to these scripts inside the NRPE container:
+    * /opt/nrpe/bin/cmnrpe_gather_checks
+    * /opt/nrpe/bin/cmnrpe_gather_metrics
+  * Make sure the NRPE container has access to the Sites Redis-server
+5. Go to the Nagios container: (inside)
+```
+ops@jump_nif:~$docch nagios
+```
+  * Edit /opt/nagios/etc/acros_init.sh - add the Sites name to the “site” list:
+```
+sites="nif prod sliv"
+```
+  * The run the script - /opt/nagios/etc/acros_init.sh
