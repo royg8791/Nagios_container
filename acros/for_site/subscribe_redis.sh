@@ -9,9 +9,10 @@
 ##################################################
 # declare host ip for redis according to SITE
 site=$(egrep ^[^" "] /mnt/data/monitoring/structure.yml | cut -d: -f1)
-[[ "$site" == "nif" ]] && redis_host="10.3.14.38" && jump="jump_$site"
-[[ "$site" == "prod" ]] && redis_host="10.3.8.133" && jump="jump-$site"
-[[ "$site" == "sliv" ]] && redis_host="10.13.7.187" && jump="jump_$site"
+[[ "$site" == "nif" ]] && redis_host="10.3.14.38"
+[[ "$site" == "prod" ]] && redis_host="10.3.8.133"
+[[ "$site" == "sliv" ]] && redis_host="10.13.7.187"
+jump="jump_$site"
 
 ##### output------ "pmessage","remetric:*","remetric:disk_doc2-nqa","metric"
 

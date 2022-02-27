@@ -49,11 +49,15 @@ result () {
 
 [[ -f "$yaml_file" ]] && rm -f $yaml_file
 
+# if "check_count" is bigger than 64k output, break into 500 checks
 checks_count=$(/opt/nagios/libexec/check_nrpe -H nrpe.$site.catchmedia.com -t 600 -c cmnrpe_gather_checks -a $site checks_count $farm)
-for m in $checks_count; do
+if [[ $checks_count -le 500 ]]; then
     # create tmp_yml_file
-    /opt/nagios/libexec/check_nrpe -H nrpe.$site.catchmedia.com -t 600 -c cmnrpe_gather_checks -a $site $farm $m >> $yaml_file
-done
+    /opt/nagios/libexec/check_nrpe -H nrpe.$site.catchmedia.com -t 600 -c cmnrpe_gather_checks -a $site $farm $checks_count >> $yaml_file
+else
+    /opt/nagios/libexec/check_nrpe -H nrpe.$site.catchmedia.com -t 600 -c cmnrpe_gather_checks -a $site $farm 500 >> $yaml_file
+    /opt/nagios/libexec/check_nrpe -H nrpe.$site.catchmedia.com -t 600 -c cmnrpe_gather_checks -a $site $farm $checks_count >> $yaml_file
+fi
 
 # check tmp_yml_file
 /opt/nagios/etc/config/yml_and_cfg_check.sh yml $site $farm

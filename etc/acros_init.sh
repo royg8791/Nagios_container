@@ -21,7 +21,7 @@ sites="nif prod sliv"
 for s in $sites; do
     mkdir -p /opt/nagios/etc/sites/$s/farms
     /opt/nagios/etc/config/gather_checks.sh $s
-    farms=$(/opt/nagios/libexec/check_nrpe -H nrpe.$s.catchmedia.com -t 600 -c cmnrpe_gather_checks -a farms)
+    farms=$(/opt/nagios/libexec/check_nrpe -H nrpe.$s.catchmedia.com -t 600 -c cmnrpe_gather_checks -a $s farms)
     for f in $farms; do
         mkdir -p /opt/nagios/etc/sites/$s/farms/$f/
         /opt/nagios/etc/config/gather_checks.sh $s $f

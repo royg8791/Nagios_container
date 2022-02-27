@@ -10,9 +10,10 @@
 ##################################################
 # declare host ip for redis according to SITE
 SITE=$1
-[[ "$SITE" == "nif" ]] && redis_host="10.3.14.38" && jump="jump_$SITE"
-[[ "$SITE" == "prod" ]] && redis_host="10.3.8.133" && jump="jump-$SITE"
-[[ "$SITE" == "sliv" ]] && redis_host="10.13.7.187" && jump="jump_$SITE"
+[[ "$SITE" == "nif" ]] && redis_host="10.3.14.38"
+[[ "$SITE" == "prod" ]] && redis_host="10.3.8.133"
+[[ "$SITE" == "sliv" ]] && redis_host="10.13.7.187"
+jump="jump_$SITE"
 
 farms=$(egrep ^" " /mnt/data/monitoring/structure.yml)
 
@@ -21,19 +22,27 @@ if [[ "$2" == "webtests" ]]; then
 elif [[ "$2" == "farms" ]]; then
     echo "$farms"
 elif [[ "$2" == "checks_count" ]]; then
-    if [[ "$3" ]] && [[ "$farms" =~ "$3" ]]; then
-        checks_count=$(redis-cli -h $redis_host -p 12006 -n 10 KEYS "checks:*" | grep $3 | wc -l)
+    farm=$3
+    if [[ "$farm" ]] && [[ "$farms" =~ "$farm" ]]; then
+        checks_count=$(redis-cli -h $redis_host -p 12006 -n 10 KEYS "checks:*${farm}*" | wc -l)
     else
+        # farm not specified, assume site check
         checks_count=$(redis-cli -h $redis_host -p 12006 -n 10 KEYS "checks:*" | egrep -v "$(echo $farms | sed 's/ /|/g')" | wc -l)
     fi
     echo $checks_count
 elif [[ "$2" ]] && [[ "$farms" =~ "$2" ]]; then
-    checks=$(redis-cli -h $redis_host -p 12006 -n 10 KEYS "checks:*" | grep $2)
+    checks=$(redis-cli -h $redis_host -p 12006 -n 10 KEYS "checks:*${2}*" | sort)
     [[ "$checks" ]] && redis-cli -h $redis_host -p 12006 -n 10 DEL $checks &>/dev/null
     redis-cli -h $redis_host -p 12006 -n 10 PUBLISH "run_checks:main-$2" "run checks" &>/dev/null
     sleep 10
-    checks=$(redis-cli -h $redis_host -p 12006 -n 10 KEYS "checks:*" | grep $2)
-    redis-cli -h $redis_host -p 12006 -n 10 MGET $checks | sed 's/\\n/\n/g'
+    checks=$(redis-cli -h $redis_host -p 12006 -n 10 KEYS "checks:*${2}*" | sort)
+    # cut output to be less than 64k for Nagios to be able to use
+    if [[ $3 -le 500 ]]; then
+        redis-cli -h $redis_host -p 12006 -n 10 MGET $(echo "$checks"|head -500) | sed 's/\\n/\n/g'
+    else
+        let tests=${3}-500
+        redis-cli -h $redis_host -p 12006 -n 10 MGET $(echo "$checks"|tail -$tests) | sed 's/\\n/\n/g'
+    fi
 else
     checks=$(redis-cli -h $redis_host -p 12006 -n 10 KEYS "checks:*" | egrep -v "$(echo $farms | sed 's/ /|/g')")
     [[ "$checks" ]] && redis-cli -h $redis_host -p 12006 -n 10 DEL $checks &>/dev/null
@@ -41,4 +50,12 @@ else
     sleep 10
     checks=$(redis-cli -h $redis_host -p 12006 -n 10 KEYS "checks:*" | egrep -v "$(echo $farms | sed 's/ /|/g')")
     redis-cli -h $redis_host -p 12006 -n 10 MGET $checks | sed 's/\\n/\n/g'
+    # cut output to be less than 64k for Nagios to be able to use
+    if [[ $2 -le 500 ]]; then
+        redis-cli -h $redis_host -p 12006 -n 10 MGET $(echo "$checks"|head -500) | sed 's/\\n/\n/g'
+    else
+        let tests=${2}-500
+        redis-cli -h $redis_host -p 12006 -n 10 MGET $(echo "$checks"|tail -$tests) | sed 's/\\n/\n/g'
+    fi
+
 fi

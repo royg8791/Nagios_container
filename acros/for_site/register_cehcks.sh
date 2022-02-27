@@ -15,9 +15,10 @@
 
 # declare host ip for redis according to SITE
 site=$(egrep ^[^" "] /mnt/data/monitoring/structure.yml | cut -d: -f1)
-[[ "$site" == "nif" ]] && redis_host="10.3.14.38" && jump="jump_$site"
-[[ "$site" == "prod" ]] && redis_host="10.3.8.133" && jump="jump-$site"
-[[ "$site" == "sliv" ]] && redis_host="10.13.7.187" && jump="jump_$site"
+[[ "$site" == "nif" ]] && redis_host="10.3.14.38"
+[[ "$site" == "prod" ]] && redis_host="10.3.8.133"
+[[ "$site" == "sliv" ]] && redis_host="10.13.7.187"
+jump="jump_$site"
 
 check=$1
 # exit if check already exists
@@ -106,8 +107,8 @@ if [[ "$HOSTNAME" == "$jump" ]]; then
     check_list "vertica-state" 20 "cmnrpe_gather_metrics" "vertica-state" "$HOSTNAME"
     check_list "vertica-storage" 20 "cmnrpe_gather_metrics" "vertica-storage" "$HOSTNAME"
     if [[ "$site" == "nif" ]]; then
-        check_list "drives" 300 "cmnrpe_script" "/mnt/data/monitoring/bin/check_r630_drives.sh" "$site"
-        check_list "backups-nafbs13" 300 "cmnrpe_script" "/mnt/data/monitoring/bin/bas_check_backups.sh"
+        check_list "drives" 300 "cmnrpe_script" "/opt/rolmin/nagios/bin/check_r630_drives.sh" "$site"
+        check_list "backups-nafbs13" 300 "cmnrpe_script" "/opt/rolmin/nagios/bin/bas_check_backups.sh"
     elif [[ "$site" == "sliv" ]]; then
         check_list "backups-AWS-EBS" 300 "cmnrpe_gather_metrics" "backups-AWS-EBS" "$HOSTNAME"
     fi

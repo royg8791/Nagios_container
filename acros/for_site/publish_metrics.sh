@@ -92,13 +92,13 @@ function create_metric () {
 ######################################### metric checks #########################################
 
 function metric_backups () {
-    data=$(/mnt/data/monitoring/bin/backups_check.sh)
+    data=$(/opt/rolmin/nagios/bin/backups_check.sh)
     problem=$(echo "$data" | grep "PROBLEM")
     create_metric "$metric" "$data" "$problem"
 }
 
 function metric_backups-AWS-EBS () {
-    data=$(/mnt/data/monitoring/bin/EBS_backup_check.sh)
+    data=$(/opt/rolmin/nagios/bin/EBS_backup_check.sh)
     problem=$(echo "$data" | grep "PROBLEM")
     create_metric "$metric" "$data" "$problem"
 }
@@ -212,7 +212,7 @@ function metric_dns () {
 }
 
 function metric_docker-mount () {
-    data=$(/mnt/data/monitoring/bin/docker_mount_check.sh)
+    data=$(/opt/rolmin/nagios/bin/docker_mount_check.sh)
     problem=$(echo "$data" | grep "PROBLEM")
     create_metric "$metric" "$data" "$problem"
 }
@@ -338,19 +338,19 @@ function metric_portworx-volume () {
 }
 
 function metric_raid () {
-    data=$(/mnt/data/monitoring/bin/publish_raid_metrics.sh)
+    data=$(/opt/rolmin/nagios/bin/publish_raid_metrics.sh)
     problem=$(echo "$data" | grep "PROBLEM")
     create_metric "$metric" "$data" "$problem"
 }
 
 function metric_raid-consistency () {
-    data=$(/mnt/data/monitoring/bin/lsi_raid_consistency_checks.sh)
+    data=$(/opt/rolmin/nagios/bin/lsi_raid_consistency_checks.sh)
     problem=$(echo "$data" | grep "PROBLEM")
     create_metric "$metric" "$data" "$problem"
 }
 
 function metric_redis () {
-    data=$(/mnt/data/monitoring/bin/redis_checks.sh)
+    data=$(/opt/rolmin/nagios/bin/redis_checks.sh)
     problem=$(echo "$data" | grep "PROBLEM")
     create_metric "$metric" "$data" "$problem"
 }
@@ -383,19 +383,19 @@ function metric_swap () {
 }
 
 function metric_swappiness () {
-    data=$(/mnt/data/monitoring/bin/swappiness/swappiness_test.sh)
+    data=$(/opt/rolmin/nagios/swappiness/swappiness_test.sh)
     problem=$(echo "$data" | grep "PROBLEM")
     create_metric "$metric" "$data" "$problem"
 }
 
 function metric_vertica-state () {
-    data=$(/mnt/data/monitoring/bin/vertica_state.sh)
+    data=$(/opt/rolmin/nagios/bin/vertica_state.sh)
     problem=$(echo "$data" | grep "PROBLEM")
     create_metric "$metric" "$data" "$problem"
 }
 
 function metric_vertica-storage () {
-    data=$(/mnt/data/monitoring/bin/vertica_storage.sh)
+    data=$(/opt/rolmin/nagios/bin/vertica_storage.sh)
     problem=$(echo "$data" | grep "PROBLEM")
     create_metric "$metric" "$data" "$problem"
 }
