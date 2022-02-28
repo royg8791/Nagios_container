@@ -53,10 +53,10 @@ result () {
 checks_count=$(/opt/nagios/libexec/check_nrpe -H nrpe.$site.catchmedia.com -t 600 -c cmnrpe_gather_checks -a $site checks_count $farm)
 if [[ $checks_count -le 500 ]]; then
     # create tmp_yml_file
-    /opt/nagios/libexec/check_nrpe -H nrpe.$site.catchmedia.com -t 600 -c cmnrpe_gather_checks -a $site $farm $checks_count >> $yaml_file
+    /opt/nagios/libexec/check_nrpe -H nrpe.$site.catchmedia.com -t 600 -c cmnrpe_gather_checks -a $site $farm 0 >> $yaml_file
 else
-    /opt/nagios/libexec/check_nrpe -H nrpe.$site.catchmedia.com -t 600 -c cmnrpe_gather_checks -a $site $farm 500 >> $yaml_file
-    /opt/nagios/libexec/check_nrpe -H nrpe.$site.catchmedia.com -t 600 -c cmnrpe_gather_checks -a $site $farm $checks_count >> $yaml_file
+    /opt/nagios/libexec/check_nrpe -H nrpe.$site.catchmedia.com -t 600 -c cmnrpe_gather_checks -a $site $farm 1 >> $yaml_file
+    /opt/nagios/libexec/check_nrpe -H nrpe.$site.catchmedia.com -t 600 -c cmnrpe_gather_checks -a $site $farm 2 >> $yaml_file
 fi
 
 # check tmp_yml_file
